@@ -1,42 +1,59 @@
 defmodule BankTest do
-  use Assertions.Case, async: true
+  use ExUnit.Case, async: true
 
-  alias Bank.Account
-  alias Bank.Transaction
+  alias Bank.Core.Account
+
+  import Hammox
+  alias Bank.RepoMock
+
+  setup :verify_on_exit!
 
   describe "create_account/0" do
-    test "should create a new account and return it" do
-      assert %Account{} = Bank.create_account()
-    end
+    test "should create a new account with a UUID id, zero balance and no transactions" do
+      RepoMock
+      |> expect(:save_account, fn _account -> :ok end)
 
-    test "id should be a UUID version 4" do
-      %Account{id: id} = Bank.create_account()
+      %Account{id: id, balance: 0, transactions: []} = Bank.create_account()
       assert {:ok, [{:uuid, _}, _, _, {:version, 4}, _]} = UUID.info(id)
     end
 
-    test "created accounts should have zero balance" do
-      assert %Account{balance: 0} = Bank.create_account()
+    test "should return :error if Repo fails" do
+      RepoMock
+      |> expect(:save_account, fn _account -> :error end)
+
+      assert Bank.create_account() == :error
     end
   end
 
-  describe "transfer/3" do
-    test " returns the updated accounts and the resulting transactions" do
-      id_1 = UUID.uuid4()
-      id_2 = UUID.uuid4()
-      account_1 = %Account{id: id_1, balance: 100}
-      account_2 = %Account{id: id_2, balance: 0}
+  describe "account_summary/1" do
+    test "compose the results of the Persistence app into an Account result" do
+      t_account_id = UUID.uuid4()
+      t_balance = 0
+      t_transactions = []
+      t_transaction_limit = 10
 
-      {accounts, transactions} = Bank.transfer(%{from: account_1, to: account_2, amount: 100})
+      RepoMock
+      |> expect(:get_balance, fn ^t_account_id -> {:ok, t_balance} end)
+      |> expect(:get_latest_transactions, fn ^t_account_id, ^t_transaction_limit -> {:ok, []} end)
 
-      assert_lists_equal(accounts, [
-        %Account{id: id_1, balance: 0},
-        %Account{id: id_2, balance: 100}
-      ])
+      assert %Account{
+               id: ^t_account_id,
+               balance: ^t_balance,
+               transactions: ^t_transactions
+             } = Bank.account_summary(t_account_id)
+    end
+  end
 
-      assert_lists_equal(transactions, [
-        %Transaction{from: id_1, to: id_2, amount: 100},
-        %Transaction{from: id_2, to: id_1, amount: -100}
-      ])
+  describe "transfer_money/3" do
+    test "should persist a transaction between the two accounts" do
+      account_id_1 = UUID.uuid4()
+      account_id_2 = UUID.uuid4()
+      amount = 100
+
+      RepoMock
+      |> expect(:save_money_transfer, fn ^account_id_1, ^account_id_2, ^amount -> :ok end)
+
+      assert Bank.transfer_money(account_id_1, account_id_2, amount) == :ok
     end
   end
 end

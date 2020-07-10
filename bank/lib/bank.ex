@@ -5,29 +5,43 @@ defmodule Bank do
   :)
   """
 
-  alias Bank.Account
-  alias Bank.Transaction
+  alias Bank.Core.Account
+  alias Bank.Repo
+
+  # alias Bank.Core.Transaction
 
   @doc """
-  Create an Account with unique id and 0 balance
+  Create an Account with unique id and 0 balance and no transactions
   """
-  @spec create_account() :: Account.t()
+  @spec create_account() :: Account.t() | :error
   def create_account() do
-    %Account{id: UUID.uuid4(), balance: 0}
+    account = Account.new()
+
+    case Repo.save_account(account.id) do
+      :ok -> account
+      :error -> :error
+    end
   end
 
-  @spec transfer(%{from: Account.t(), to: Account.t(), amount: integer()}) ::
-          {[Account.t()], [Transaction.t()]}
-  def transfer(%{from: account_1, to: account_2, amount: amount}) do
-    {
-      [
-        struct(account_1, balance: account_1.balance - amount),
-        struct(account_2, balance: account_2.balance + amount)
-      ],
-      [
-        %Transaction{from: account_1.id, to: account_2.id, amount: amount},
-        %Transaction{from: account_2.id, to: account_1.id, amount: -amount}
-      ]
-    }
+  @spec account_summary(binary()) :: Account.t() | :error
+  def account_summary(id) do
+    with {:ok, balance} <- Repo.get_balance(id),
+         {:ok, latest_transactions} <- Repo.get_latest_transactions(id, 10) do
+      %Account{
+        id: id,
+        balance: balance,
+        transactions: latest_transactions
+      }
+    else
+      _ -> :error
+    end
+  end
+
+  @spec transfer_money(binary(), binary(), integer()) :: :ok | :error
+  def transfer_money(sender_id, receiver_id, amount) do
+    case Repo.save_money_transfer(sender_id, receiver_id, amount) do
+      :ok -> :ok
+      _ -> :error
+    end
   end
 end

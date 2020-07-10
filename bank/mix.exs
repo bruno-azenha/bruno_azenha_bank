@@ -7,9 +7,13 @@ defmodule Bank.MixProject do
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      elixirc_paths: elixirc_paths(Mix.env())
     ]
   end
+
+  defp elixirc_paths(:test), do: ["test/support", "lib"]
+  defp elixirc_paths(_), do: ["lib"]
 
   # Run "mix help compile.app" to learn about applications.
   def application do
@@ -23,7 +27,7 @@ defmodule Bank.MixProject do
   defp deps do
     [
       {:elixir_uuid, "~> 1.2"},
-      {:assertions, "~> 0.10", only: :test},
+      {:hammox, "~> 0.2"},
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false}
     ]
   end
