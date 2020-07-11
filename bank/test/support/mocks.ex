@@ -1,3 +1,3 @@
-Application.put_env(:bank, :bank_repo, Bank.RepoMock)
+Application.put_env(:bank, :bank_repo, Bank.PersistenceMock)
 
-Hammox.defmock(Bank.RepoMock, for: Bank.Repo)
+Hammox.defmock(Bank.PersistenceMock, for: Bank.Persistence)

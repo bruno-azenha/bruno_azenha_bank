@@ -11,10 +11,10 @@ defmodule BankPersistenceTest do
       assert :ok == BankPersistence.save_account(account_id)
     end
 
-    test "should return :error if account with id already exist" do
+    test "should return {:error, :already_exists} if account with id already exist" do
       account_id = UUID.uuid4()
       assert :ok == BankPersistence.save_account(account_id)
-      assert :error == BankPersistence.save_account(account_id)
+      assert {:error, :account_already_exists} == BankPersistence.save_account(account_id)
     end
   end
 
@@ -25,7 +25,8 @@ defmodule BankPersistenceTest do
       BankPersistence.save_account(receiver_id)
       amount = 100
 
-      assert :error = BankPersistence.save_transaction(sender_id, receiver_id, amount)
+      assert {:error, :account_not_found} =
+               BankPersistence.save_transaction(sender_id, receiver_id, amount)
     end
 
     test "return :error if receiver_account is not found" do
@@ -34,7 +35,8 @@ defmodule BankPersistenceTest do
       BankPersistence.save_account(sender_id)
       amount = 100
 
-      assert :error = BankPersistence.save_transaction(sender_id, receiver_id, amount)
+      assert {:error, :account_not_found} =
+               BankPersistence.save_transaction(sender_id, receiver_id, amount)
     end
 
     test "return :ok if transaction is saved successfully" do
@@ -55,11 +57,12 @@ defmodule BankPersistenceTest do
       BankPersistence.save_account(account_id)
       amount = 100
 
-      assert :error = BankPersistence.save_transaction(account_id, account_id, amount)
+      assert {:error, :same_sender_and_receiver} =
+               BankPersistence.save_transaction(account_id, account_id, amount)
     end
   end
 
-  describe "get_latest_transactions" do
+  describe "get_latest_transactions/2" do
     test "should return {:ok, []} if there are no transactions for that account" do
       account_id = UUID.uuid4()
       max = 10
@@ -87,8 +90,16 @@ defmodule BankPersistenceTest do
 
       assert {:ok,
               [
-                %{id: ^transaction_id, from: ^account_id, to: ^receiver_id, amount: amount}
+                %{
+                  id: ^transaction_id,
+                  from: ^account_id,
+                  to: ^receiver_id,
+                  amount: amount,
+                  created_at: created_at
+                }
               ]} = BankPersistence.get_latest_transactions(account_id, max)
+
+      refute is_nil(created_at)
     end
 
     test "should return the max number of transactions. Most recent first." do
@@ -109,6 +120,46 @@ defmodule BankPersistenceTest do
                 %{id: ^transaction_3_id, from: ^receiver_id, to: ^account_id, amount: 30},
                 %{id: ^transaction_2_id, from: ^account_id, to: ^receiver_id, amount: 20}
               ]} = BankPersistence.get_latest_transactions(account_id, max)
+    end
+  end
+
+  describe "get_account_balance/1" do
+    test "should return {:error, :account_not_found} if account does not exist" do
+      account_id = UUID.uuid4()
+      assert {:error, :account_not_found} = BankPersistence.get_account_balance(account_id)
+    end
+
+    test "should return {:ok, 0} if there are no transactions" do
+      account_id = UUID.uuid4()
+      :ok = BankPersistence.save_account(account_id)
+      assert {:ok, 0} = BankPersistence.get_account_balance(account_id)
+    end
+
+    test "should return {:ok, balance} with the sum of all transactions for that account" do
+      account_id = UUID.uuid4()
+      other_account_id = UUID.uuid4()
+      yet_another_account_id = UUID.uuid4()
+
+      :ok = BankPersistence.save_account(account_id)
+      :ok = BankPersistence.save_account(other_account_id)
+      :ok = BankPersistence.save_account(yet_another_account_id)
+
+      # Transactions that have relevant taking part in
+      BankPersistence.save_transaction(account_id, other_account_id, 100)
+      BankPersistence.save_transaction(account_id, other_account_id, 100)
+      BankPersistence.save_transaction(account_id, other_account_id, 400)
+      BankPersistence.save_transaction(other_account_id, account_id, 100)
+      BankPersistence.save_transaction(yet_another_account_id, account_id, 1000)
+      BankPersistence.save_transaction(other_account_id, account_id, 200)
+
+      # Other transaction that should not matter
+      BankPersistence.save_transaction(other_account_id, yet_another_account_id, 100)
+      BankPersistence.save_transaction(yet_another_account_id, other_account_id, 500)
+
+      # Sum of the relevant test transactions above
+      expected_balance = 700
+
+      assert {:ok, ^expected_balance} = BankPersistence.get_account_balance(account_id)
     end
   end
 end

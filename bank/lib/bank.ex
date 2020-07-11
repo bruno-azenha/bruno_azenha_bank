@@ -6,42 +6,38 @@ defmodule Bank do
   """
 
   alias Bank.Core.Account
-  alias Bank.Repo
-
-  # alias Bank.Core.Transaction
+  alias Bank.Core.Transaction
+  alias Bank.Persistence
 
   @doc """
   Create an Account with unique id and 0 balance and no transactions
   """
-  @spec create_account() :: Account.t() | :error
+  @spec create_account() :: Account.t() | {:error, :account_already_exists}
   def create_account() do
     account = Account.new()
 
-    case Repo.save_account(account.id) do
-      :ok -> account
-      :error -> :error
+    with :ok <- Persistence.save_account(account.id) do
+      account
     end
   end
 
-  @spec account_summary(binary()) :: Account.t() | :error
-  def account_summary(id) do
-    with {:ok, balance} <- Repo.get_balance(id),
-         {:ok, latest_transactions} <- Repo.get_latest_transactions(id, 10) do
+  @doc """
+  Returns the account summary including the latest 10 transactions
+  """
+  @spec account_summary(binary(), integer()) :: Account.t() | :error
+  def account_summary(id, max_transactions \\ 10) do
+    with {:ok, balance} <- Persistence.get_balance(id),
+         {:ok, latest_transactions} <- Persistence.get_latest_transactions(id, max_transactions) do
       %Account{
         id: id,
         balance: balance,
-        transactions: latest_transactions
+        transactions: Enum.map(latest_transactions, &struct(Transaction, &1))
       }
-    else
-      _ -> :error
     end
   end
 
   @spec transfer_money(binary(), binary(), integer()) :: :ok | :error
   def transfer_money(sender_id, receiver_id, amount) do
-    case Repo.save_transaction(sender_id, receiver_id, amount) do
-      :ok -> :ok
-      _ -> :error
-    end
+    Persistence.save_transaction(sender_id, receiver_id, amount)
   end
 end
