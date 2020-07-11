@@ -1,6 +1,7 @@
 defmodule BankPersistence.Account do
   use Ecto.Schema
 
+  @timestamps_opts [inserted_at: :created_at, type: :utc_datetime_usec]
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "accounts" do

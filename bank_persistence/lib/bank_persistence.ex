@@ -21,16 +21,12 @@ defmodule BankPersistence do
 
   def save_transaction(sender_id, receiver_id, amount) do
     with %Account{id: ^sender_id} <- Repo.get(Account, sender_id),
-         %Account{id: ^receiver_id} <- Repo.get(Account, receiver_id) do
-      %Transaction{
-        sender_id: sender_id,
-        receiver_id: receiver_id,
-        amount: amount
-      }
-      |> Transaction.insert_changeset()
-      |> Repo.insert()
-
-      :ok
+         %Account{id: ^receiver_id} <- Repo.get(Account, receiver_id),
+         {:ok, transaction} <-
+           %Transaction{sender_id: sender_id, receiver_id: receiver_id, amount: amount}
+           |> Transaction.insert_changeset()
+           |> Repo.insert() do
+      {:ok, transaction.id}
     else
       _ -> :error
     end
@@ -39,10 +35,14 @@ defmodule BankPersistence do
   @spec get_latest_transactions(binary(), integer()) ::
           {:ok, [%{from: binary(), to: binary(), amount: integer()}]}
           | {:error, :account_not_found}
-  def get_latest_transactions(account_id, _max) do
+  def get_latest_transactions(account_id, max) do
     with %Account{} <- Repo.get(Account, account_id) do
       query =
-        from(t in Transaction, where: t.sender_id == ^account_id or t.receiver_id == ^account_id)
+        from(t in Transaction,
+          where: t.sender_id == ^account_id or t.receiver_id == ^account_id,
+          order_by: [desc: t.created_at],
+          limit: ^max
+        )
 
       transactions =
         query
@@ -57,6 +57,7 @@ defmodule BankPersistence do
 
   defp convert_to_response_map(transaction = %Transaction{}) do
     %{
+      id: transaction.id,
       from: transaction.sender_id,
       to: transaction.receiver_id,
       amount: transaction.amount

@@ -4,8 +4,7 @@ defmodule BankPersistence.Repo.Migrations.CreateAccounts do
   def change do
     create table(:accounts, primary_key: false) do
       add(:id, :uuid, primary_key: true)
-
-      timestamps()
+      timestamps(inserted_at: :created_at, type: :utc_datetime_usec)
     end
   end
 end

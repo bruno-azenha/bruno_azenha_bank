@@ -7,7 +7,8 @@ defmodule BankPersistence.MixProject do
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      aliases: aliases()
     ]
   end
 
@@ -24,6 +25,12 @@ defmodule BankPersistence.MixProject do
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.0.0"}
+    ]
+  end
+
+  defp aliases do
+    [
+      db_reset: ["ecto.drop --quiet", "ecto.create --quiet", "ecto.migrate --quiet", "test"]
     ]
   end
 end

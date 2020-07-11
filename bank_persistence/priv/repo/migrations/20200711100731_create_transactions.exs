@@ -7,7 +7,7 @@ defmodule BankPersistence.Repo.Migrations.CreateTransactions do
       add(:sender_id, references(:accounts, type: :uuid))
       add(:receiver_id, references(:accounts, type: :uuid))
       add(:amount, :integer)
-      timestamps()
+      timestamps(inserted_at: :created_at, updated_at: false, type: :utc_datetime_usec)
     end
 
     create(
@@ -16,8 +16,8 @@ defmodule BankPersistence.Repo.Migrations.CreateTransactions do
       )
     )
 
-    create(index(:transactions, [:sender_id, :inserted_at]))
-    create(index(:transactions, [:receiver_id, :inserted_at]))
-    create(index(:transactions, [:inserted_at]))
+    create(index(:transactions, [:sender_id, :created_at]))
+    create(index(:transactions, [:receiver_id, :created_at]))
+    create(index(:transactions, [:created_at]))
   end
 end

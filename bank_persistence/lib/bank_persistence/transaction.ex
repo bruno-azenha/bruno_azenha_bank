@@ -3,6 +3,7 @@ defmodule BankPersistence.Transaction do
 
   alias BankPersistence.Account
 
+  @timestamps_opts [inserted_at: :created_at, updated_at: false, type: :utc_datetime_usec]
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "transactions" do

@@ -45,7 +45,9 @@ defmodule BankPersistenceTest do
       amount = 100
 
       BankPersistence.save_account(sender_id)
-      assert :ok = BankPersistence.save_transaction(sender_id, receiver_id, amount)
+
+      assert {:ok, _transaction_id} =
+               BankPersistence.save_transaction(sender_id, receiver_id, amount)
     end
 
     test "return :error if sender_id and receiver_id are the same" do
@@ -65,7 +67,7 @@ defmodule BankPersistenceTest do
       assert {:ok, []} == BankPersistence.get_latest_transactions(account_id, max)
     end
 
-    test "should return :error if the account does not exist" do
+    test "should return {:error, :account_not_found} if the account does not exist" do
       account_id = UUID.uuid4()
       max = 10
 
@@ -81,11 +83,31 @@ defmodule BankPersistenceTest do
       :ok = BankPersistence.save_account(account_id)
       :ok = BankPersistence.save_account(receiver_id)
 
-      :ok = BankPersistence.save_transaction(account_id, receiver_id, amount)
+      {:ok, transaction_id} = BankPersistence.save_transaction(account_id, receiver_id, amount)
 
       assert {:ok,
               [
-                %{from: ^account_id, to: ^receiver_id, amount: amount}
+                %{id: ^transaction_id, from: ^account_id, to: ^receiver_id, amount: amount}
+              ]} = BankPersistence.get_latest_transactions(account_id, max)
+    end
+
+    test "should return the max number of transactions. Most recent first." do
+      account_id = UUID.uuid4()
+      receiver_id = UUID.uuid4()
+      max = 3
+      :ok = BankPersistence.save_account(account_id)
+      :ok = BankPersistence.save_account(receiver_id)
+
+      {:ok, _transaction_1_id} = BankPersistence.save_transaction(account_id, receiver_id, 10)
+      {:ok, transaction_2_id} = BankPersistence.save_transaction(account_id, receiver_id, 20)
+      {:ok, transaction_3_id} = BankPersistence.save_transaction(receiver_id, account_id, 30)
+      {:ok, transaction_4_id} = BankPersistence.save_transaction(receiver_id, account_id, 40)
+
+      assert {:ok,
+              [
+                %{id: ^transaction_4_id, from: ^receiver_id, to: ^account_id, amount: 40},
+                %{id: ^transaction_3_id, from: ^receiver_id, to: ^account_id, amount: 30},
+                %{id: ^transaction_2_id, from: ^account_id, to: ^receiver_id, amount: 20}
               ]} = BankPersistence.get_latest_transactions(account_id, max)
     end
   end
