@@ -24,19 +24,22 @@ defmodule Bank do
   @doc """
   Returns the account summary including the latest 10 transactions
   """
-  @spec account_summary(binary(), integer()) :: Account.t() | :error
+  @spec account_summary(binary(), integer()) :: Account.t() | {:error, :account_not_found}
   def account_summary(id, max_transactions \\ 10) do
     with {:ok, balance} <- Persistence.get_balance(id),
          {:ok, latest_transactions} <- Persistence.get_latest_transactions(id, max_transactions) do
+      transactions = Enum.map(latest_transactions, &struct(Transaction, &1))
+
       %Account{
         id: id,
         balance: balance,
-        transactions: Enum.map(latest_transactions, &struct(Transaction, &1))
+        transactions: transactions
       }
     end
   end
 
-  @spec transfer_money(binary(), binary(), integer()) :: :ok | :error
+  @spec transfer_money(binary(), binary(), integer()) ::
+          :ok | {:error, :account_not_found} | {:error, :same_sender_and_receiver}
   def transfer_money(sender_id, receiver_id, amount) do
     Persistence.save_transaction(sender_id, receiver_id, amount)
   end

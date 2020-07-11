@@ -27,7 +27,7 @@ defmodule Bank.MixProject do
   defp deps do
     [
       {:elixir_uuid, "~> 1.2"},
-      {:hammox, "~> 0.2"},
+      {:hammox, "~> 0.2", only: :test},
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false}
     ]
   end
