@@ -41,7 +41,7 @@ defmodule BankTest do
       transaction_limit = 10
 
       PersistenceMock
-      |> expect(:get_balance, fn ^sender_id -> {:ok, balance} end)
+      |> expect(:get_account_balance, fn ^sender_id -> {:ok, balance} end)
       |> expect(:get_latest_transactions, fn ^sender_id, ^transaction_limit ->
         {:ok, latest_transactions_response}
       end)
@@ -79,12 +79,15 @@ defmodule BankTest do
     test "should persist a transaction between the two accounts" do
       account_id_1 = UUID.uuid4()
       account_id_2 = UUID.uuid4()
+      transaction_id = UUID.uuid4()
       amount = 100
 
       PersistenceMock
-      |> expect(:save_transaction, fn ^account_id_1, ^account_id_2, ^amount -> :ok end)
+      |> expect(:save_transaction, fn ^account_id_1, ^account_id_2, ^amount ->
+        {:ok, transaction_id}
+      end)
 
-      assert Bank.transfer_money(account_id_1, account_id_2, amount) == :ok
+      assert {:ok, ^transaction_id} = Bank.transfer_money(account_id_1, account_id_2, amount)
     end
   end
 

@@ -10,16 +10,9 @@ defmodule BankPersistence.Account do
     timestamps()
   end
 
-  def insert_changeset(account, params \\ %{}) do
-    account
-    |> Ecto.Changeset.cast(params, [:id])
-    |> Ecto.Changeset.unique_constraint(:id, name: :accounts_pkey)
-    |> Ecto.Changeset.validate_required([:id])
-  end
-
   def save(id) do
     %__MODULE__{id: id}
-    |> __MODULE__.insert_changeset()
+    |> insert_changeset()
     |> Repo.insert()
   end
 
@@ -28,5 +21,12 @@ defmodule BankPersistence.Account do
       %__MODULE__{} -> true
       nil -> false
     end
+  end
+
+  defp insert_changeset(account, params \\ %{}) do
+    account
+    |> Ecto.Changeset.cast(params, [:id])
+    |> Ecto.Changeset.unique_constraint(:id, name: :accounts_pkey)
+    |> Ecto.Changeset.validate_required([:id])
   end
 end

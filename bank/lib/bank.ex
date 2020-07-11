@@ -12,7 +12,7 @@ defmodule Bank do
   @doc """
   Create an Account with unique id and 0 balance and no transactions
   """
-  @spec create_account() :: Account.t() | {:error, :account_already_exists}
+  @spec create_account() :: Account.t()
   def create_account() do
     account = Account.new()
 
@@ -26,7 +26,7 @@ defmodule Bank do
   """
   @spec account_summary(binary(), integer()) :: Account.t() | {:error, :account_not_found}
   def account_summary(id, max_transactions \\ 10) do
-    with {:ok, balance} <- Persistence.get_balance(id),
+    with {:ok, balance} <- Persistence.get_account_balance(id),
          {:ok, latest_transactions} <- Persistence.get_latest_transactions(id, max_transactions) do
       transactions = Enum.map(latest_transactions, &struct(Transaction, &1))
 

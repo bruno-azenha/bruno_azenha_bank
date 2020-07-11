@@ -27,7 +27,16 @@ defmodule BankPersistence do
   end
 
   @spec get_latest_transactions(binary(), integer()) ::
-          {:ok, [%{from: binary(), to: binary(), amount: integer(), created_at: DateTime.t()}]}
+          {:ok,
+           [
+             %{
+               id: binary(),
+               sender_id: binary(),
+               receiver_id: binary(),
+               amount: integer(),
+               created_at: DateTime.t()
+             }
+           ]}
           | {:error, :account_not_found}
   def get_latest_transactions(account_id, max) do
     with true <- Account.exists?(account_id) do
@@ -44,8 +53,8 @@ defmodule BankPersistence do
   defp convert_to_response_map(transaction = %Transaction{}) do
     %{
       id: transaction.id,
-      from: transaction.sender_id,
-      to: transaction.receiver_id,
+      sender_id: transaction.sender_id,
+      receiver_id: transaction.receiver_id,
       amount: transaction.amount,
       created_at: transaction.created_at
     }

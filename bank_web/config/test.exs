@@ -8,3 +8,6 @@ config :bank_web, BankWeb.Endpoint,
 
 # Print only warnings and errors during test
 config :logger, level: :warn
+
+config :bank_web,
+  bank_module: BankWeb.BankMock

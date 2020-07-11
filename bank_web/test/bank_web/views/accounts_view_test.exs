@@ -1,4 +1,4 @@
-defmodule BankWeb.BankViewTest do
+defmodule BankWeb.AccountsViewTest do
   use BankWeb.ConnCase, async: true
 
   import Phoenix.View
@@ -31,7 +31,7 @@ defmodule BankWeb.BankViewTest do
     }
 
     rendered_account_summary =
-      render(BankWeb.BankView, "account_summary.json", %{account_summary: account_summary})
+      render(BankWeb.AccountsView, "account_summary.json", %{account_summary: account_summary})
 
     assert rendered_account_summary == %{
              account_summary: %{

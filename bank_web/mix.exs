@@ -34,6 +34,7 @@ defmodule BankWeb.MixProject do
   defp deps do
     [
       {:bank, path: "../bank/"},
+      {:elixir_uuid, "~> 1.2"},
       {:phoenix, "~> 1.5.3"},
       {:telemetry_metrics, "~> 0.4"},
       {:telemetry_poller, "~> 0.4"},

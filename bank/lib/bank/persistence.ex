@@ -1,12 +1,13 @@
 defmodule Bank.Persistence do
   @callback save_account(binary()) :: :ok | {:error, :account_already_exists}
 
-  @callback get_balance(binary()) :: {:ok, integer()} | {:error, :account_not_found}
+  @callback get_account_balance(binary()) :: {:ok, integer()} | {:error, :account_not_found}
 
   @callback get_latest_transactions(binary(), integer()) ::
               {:ok,
                [
                  %{
+                   id: binary(),
                    sender_id: binary(),
                    receiver_id: binary(),
                    amount: integer(),
@@ -16,7 +17,10 @@ defmodule Bank.Persistence do
               | {:error, :account_not_found}
 
   @callback save_transaction(binary(), binary(), integer()) ::
-              :ok | {:error, :account_not_found} | {:error, :same_sender_and_receiver} | :error
+              {:ok, binary()}
+              | {:error, :account_not_found}
+              | {:error, :same_sender_and_receiver}
+              | :error
 
   ##########
 
@@ -25,13 +29,14 @@ defmodule Bank.Persistence do
   @spec save_account(binary()) :: :ok | {:error, :account_already_exists}
   defdelegate save_account(account), to: @bank_repo
 
-  @spec get_balance(binary()) :: {:ok, integer()} | {:error, :account_not_found}
-  defdelegate get_balance(id), to: @bank_repo
+  @spec get_account_balance(binary()) :: {:ok, integer()} | {:error, :account_not_found}
+  defdelegate get_account_balance(id), to: @bank_repo
 
   @spec get_latest_transactions(binary(), integer()) ::
           {:ok,
            [
              %{
+               id: binary(),
                sender_id: binary(),
                receiver_id: binary(),
                amount: integer(),
@@ -42,6 +47,9 @@ defmodule Bank.Persistence do
   defdelegate get_latest_transactions(id, limit), to: @bank_repo
 
   @spec save_transaction(binary(), binary(), integer()) ::
-          :ok | {:error, :account_not_found} | {:error, :same_sender_and_receiver} | :error
+          {:ok, binary()}
+          | {:error, :account_not_found}
+          | {:error, :same_sender_and_receiver}
+          | :error
   defdelegate save_transaction(sender_id, receiver_id, amount), to: @bank_repo
 end

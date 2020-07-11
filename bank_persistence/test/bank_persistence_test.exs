@@ -39,7 +39,7 @@ defmodule BankPersistenceTest do
                BankPersistence.save_transaction(sender_id, receiver_id, amount)
     end
 
-    test "return :ok if transaction is saved successfully" do
+    test "return {:ok, transaction_id} if transaction is saved successfully" do
       sender_id = UUID.uuid4()
       receiver_id = UUID.uuid4()
       BankPersistence.save_account(sender_id)
@@ -92,8 +92,8 @@ defmodule BankPersistenceTest do
               [
                 %{
                   id: ^transaction_id,
-                  from: ^account_id,
-                  to: ^receiver_id,
+                  sender_id: ^account_id,
+                  receiver_id: ^receiver_id,
                   amount: amount,
                   created_at: created_at
                 }
@@ -116,9 +116,24 @@ defmodule BankPersistenceTest do
 
       assert {:ok,
               [
-                %{id: ^transaction_4_id, from: ^receiver_id, to: ^account_id, amount: 40},
-                %{id: ^transaction_3_id, from: ^receiver_id, to: ^account_id, amount: 30},
-                %{id: ^transaction_2_id, from: ^account_id, to: ^receiver_id, amount: 20}
+                %{
+                  id: ^transaction_4_id,
+                  sender_id: ^receiver_id,
+                  receiver_id: ^account_id,
+                  amount: 40
+                },
+                %{
+                  id: ^transaction_3_id,
+                  sender_id: ^receiver_id,
+                  receiver_id: ^account_id,
+                  amount: 30
+                },
+                %{
+                  id: ^transaction_2_id,
+                  sender_id: ^account_id,
+                  receiver_id: ^receiver_id,
+                  amount: 20
+                }
               ]} = BankPersistence.get_latest_transactions(account_id, max)
     end
   end

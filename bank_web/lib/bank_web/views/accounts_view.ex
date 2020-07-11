@@ -1,4 +1,4 @@
-defmodule BankWeb.BankView do
+defmodule BankWeb.AccountsView do
   use BankWeb, :view
 
   alias Bank.Core.Account
