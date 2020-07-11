@@ -1,8 +1,7 @@
 # Queries
 
-The app that should be started is the `bank_poncho`. Inside you can see the configuration.
-
-Change The ecto configs for the database to whatever postgres db suits you.
+The app that should be started is the `bank_poncho`. Inside you can see the configuration folders.
+Change The ecto configs for the dev database to whatever postgres db suits you.
 
 from inside the `bank_poncho` folder:
 
