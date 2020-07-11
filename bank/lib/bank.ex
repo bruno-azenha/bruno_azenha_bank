@@ -39,7 +39,7 @@ defmodule Bank do
 
   @spec transfer_money(binary(), binary(), integer()) :: :ok | :error
   def transfer_money(sender_id, receiver_id, amount) do
-    case Repo.save_money_transfer(sender_id, receiver_id, amount) do
+    case Repo.save_transaction(sender_id, receiver_id, amount) do
       :ok -> :ok
       _ -> :error
     end

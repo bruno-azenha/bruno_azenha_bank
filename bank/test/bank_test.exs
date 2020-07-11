@@ -51,7 +51,7 @@ defmodule BankTest do
       amount = 100
 
       RepoMock
-      |> expect(:save_money_transfer, fn ^account_id_1, ^account_id_2, ^amount -> :ok end)
+      |> expect(:save_transaction, fn ^account_id_1, ^account_id_2, ^amount -> :ok end)
 
       assert Bank.transfer_money(account_id_1, account_id_2, amount) == :ok
     end
